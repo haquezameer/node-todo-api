@@ -13,8 +13,9 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp',(err,db)=>{
     // });
 
     db.collection('user').insertOne({
-      name: 'Zameer',
-      location: 'Itangar'
+      name: 'Mousin',
+      location: 'Itangar',
+      age: 25
     },(err,res) =>{
       if(err)
         return console.log('Failed to save user!');
