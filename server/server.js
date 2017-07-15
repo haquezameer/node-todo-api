@@ -8,7 +8,7 @@ var {User} = require('./models/user');
 
 app.use(bodyparser.json());
 
-app.post('/post',(req,res) => {
+app.post('/todo',(req,res) => {
     var todo = new Todo({
       text: req.body.text
     });
@@ -19,13 +19,18 @@ app.post('/post',(req,res) => {
     });
 });
 
-
-// var newTodo = new Todo({
-//   text: "Setup express"
-// });
-//
-// newTodo.save().then((doc) => console.log(doc),(err) => console.log(err));
+app.get('/todo',(req,res) => {
+  Todo.find().then((docs) => {
+    res.send(docs);
+  },(err) => {
+    res.status(400).send(err);
+  });
+});
 
 app.listen('3000',() => {
   console.log('Server started');
 });
+
+module.exports = {
+  app
+};
