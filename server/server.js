@@ -3,12 +3,15 @@ var bodyparser = require('body-parser');
 var {ObjectId} = require('mongodb');
 
 var app = express();
+const port = process.env.PORT || 3000;
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 
+
 app.use(bodyparser.json());
+
 
 app.post('/todo',(req,res) => {
     var todo = new Todo({
@@ -43,8 +46,8 @@ app.get('/todo/:id',(req,res) => {
     });
 });
 
-app.listen('3000',() => {
-  console.log('Server started');
+app.listen(port,() => {
+  console.log(`Server started at port ${port}`);
 });
 
  module.exports = {

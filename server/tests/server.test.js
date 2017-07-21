@@ -1,0 +1,108 @@
+const expect = require('expect');
+const request = require('supertest');
+const {ObjectId} = require('mongodb');
+
+const {app} = require('./../server');
+const {Todo} = require('./../models/todo');
+
+const todos = [{
+  _id: new ObjectId(),
+  text: "Eat breakfast"
+},{
+  _id: new ObjectId(),
+  text: "Eat lunch"
+}];
+
+beforeEach((done) => {
+  Todo.remove({}).then(() => {
+    return Todo.insertMany(todos);
+  }).then(() => done());
+});
+
+
+describe('Post /todo',() => {
+
+  it('Should save data',(done) => {
+      var text = "save data";
+      request(app)
+      .post('/todo')
+      .send({text})
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.text).toBe(text);
+      })
+      .end((err,res) => {
+        if(err)
+          return done(err);
+        Todo.find().then((docs) => {
+          expect(docs.length).toBe(3);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('Should fail',(done) => {
+    request(app)
+    .post('/todo')
+    .send({})
+    .expect(400)
+    .end((err,res) => {
+        if(err)
+        return  done(err);
+        Todo.find({}).then((docs) => {
+          expect(docs.length).toBe(2);
+          done();
+        }).catch((e) => done(e));
+    });
+  });
+});
+
+describe('GET /todo',() => {
+  it('Should fetch all todos',(done) =>{
+    request(app)
+    .get('/todo')
+    .expect(200)
+    .end((err,res) => {
+        if(err)
+          return done(err);
+        Todo.find().then((docs) => {
+          expect(docs.length).toBe(2);
+          console.log(JSON.stringify(docs,undefined,2));
+          done();
+        }).catch((e) => done(e));
+    });
+  });
+});
+
+describe('GET /todo/:id', () => {
+  it('should fetch data for id', (done) => {
+    request(app)
+    .get(`/todo/${todos[0]._id}`)
+    .expect(200)
+    .expect((res) =>{
+      expect(res.body.todo.text).toBe(todos[0].text);
+    })
+    .end(done);
+  });
+
+  it('Should fail to fetch for invalid id',(done) => {
+    const id = todos[0]._id.toHexString() + '1';
+    request(app)
+    .get(`/todo/${id}`)
+    .expect(404)
+    .end(done);
+  });
+
+
+    it('Should return empty array for id',(done) => {
+      const id = new ObjectId();
+      request(app)
+      .get(`/todo/${id}`)
+      .expect(404)
+      .expect((res) => {
+        expect(typeof res.body.todo).toBe('undefined');
+      })
+      .end(done);
+    });
+
+});
