@@ -11,6 +11,7 @@ const port = process.env.PORT;
 const {mongoose} = require('./db/mongoose');
 const {Todo} = require('./models/todo');
 const {User} = require('./models/user');
+const {authenticate} = require('./middleware/authenticate');
 
 
 app.use(bodyparser.json());
@@ -93,6 +94,12 @@ app.post('/user',(req,res) => {
   res.header('x-auth',token).send(user);
 }).catch((e) => res.send(e));
 });
+
+
+app.get('/user/me',authenticate,(req,res) => {
+  res.send(req.user);
+});
+
 
 app.listen(port,() => {
   console.log(`Server started at port ${port}`);
