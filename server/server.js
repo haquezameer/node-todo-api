@@ -1,15 +1,16 @@
 require('./config/config');
+const validator = require('validator');
 const _ = require('lodash');
-var express = require('express');
-var bodyparser = require('body-parser');
-var {ObjectId} = require('mongodb');
+const  express = require('express');
+const bodyparser = require('body-parser');
+const {ObjectId} = require('mongodb');
 
-var app = express();
+const app = express();
 const port = process.env.PORT;
 
-var {mongoose} = require('./db/mongoose');
-var {Todo} = require('./models/todo');
-var {User} = require('./models/user');
+const {mongoose} = require('./db/mongoose');
+const {Todo} = require('./models/todo');
+const {User} = require('./models/user');
 
 
 app.use(bodyparser.json());
@@ -81,6 +82,16 @@ app.patch('/todo/:id',(req,res) => {
       res.status(404).send();
     res.send({todo});
   }).catch((e) => res.status(400).send());
+});
+
+app.post('/user',(req,res) => {
+  const body = _.pick(req.body,['email','password']);
+  var user = new User(body);
+  user.save().then(() => {
+      return user.generateAuthToken();
+  }).then((token) => {
+  res.header('x-auth',token).send(user);
+}).catch((e) => res.send(e));
 });
 
 app.listen(port,() => {
