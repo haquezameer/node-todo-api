@@ -7,7 +7,9 @@ const {Todo} = require('./../models/todo');
 
 const todos = [{
   _id: new ObjectId(),
-  text: "Eat breakfast"
+  text: "Eat breakfast",
+  completed: false,
+  completedAt: null
 },{
   _id: new ObjectId(),
   text: "Eat lunch"
@@ -143,6 +145,44 @@ describe('Delete /todo/:id',() => {
     request(app)
     .get(`/todo/${id}`)
     .expect(404)
+    .end(done);
+  });
+});
+
+describe('PATCH /todo',() => {
+
+  it('should make completedAt true',(done) => {
+    const id = todos[0]._id.toHexString();
+    const body = {
+      text: "Update test",
+      completed: true
+    };
+    request(app)
+    .patch(`/todo/${id}`)
+    .send(body)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe("Update test");
+      expect(typeof res.body.todo.completedAt).toBe('number');
+      expect(res.body.todo.completed).toBe(true) ;
+    })
+    .end(done);
+});
+
+  it('should make completedAt null',(done) => {
+    const id = todos[1]._id.toHexString();
+    const body = {
+      text: "false completed"
+    };
+    request(app)
+    .patch(`/todo/${id}`)
+    .send(body)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(body.text);
+      expect(res.body.todo.completedAt).toNotExist();
+      expect(res.body.todo.completed).toBe(false) ;
+    })
     .end(done);
   });
 
