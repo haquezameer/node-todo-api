@@ -50,13 +50,17 @@ app.delete('/todo/:id',(req,res) => {
   var id = req.params.id;
   if(!ObjectId.isValid(id))
     res.status(404).send();
-  Todo.findByIdAndRemove(id).then((doc) => {
-      if(!doc)
+  Todo.findByIdAndRemove(id).then((todo) => {
+      if(!todo)
         res.status(404).send();
-      res.send(doc);
+      res.send({todo});
   }).catch((e) => res.status(400).send());
 });
 
 app.listen(port,() => {
   console.log(`Server started at port ${port}`);
 });
+
+module.exports ={
+  app
+};
