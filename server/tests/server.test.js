@@ -4,23 +4,11 @@ const {ObjectId} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
+const {todos,populateTodos,users,populateUsers} = require('./seed/seed');
 
-const todos = [{
-  _id: new ObjectId(),
-  text: "test 1",
-  completed: false,
-  completedAt: null
-},{
-  _id: new ObjectId(),
-  text: "test 2"
-}];
-
-beforeEach((done) => {
-  Todo.remove({}).then(() => {
-    return Todo.insertMany(todos);
-  }).then(() => done());
-});
-
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('Post /todo',() => {
 
@@ -185,5 +173,62 @@ describe('PATCH /todo',() => {
     })
     .end(done);
   });
+});
 
+describe('GET/ user/me',() => {
+
+  it('should get user back',(done) => {
+      request(app)
+      .get('/user/me')
+      .set('x-auth',users[0].tokens[0].token)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body._id).toBe(users[0]._id.toHexString());
+      })
+      .end(done);
+  });
+
+  it('should get 401',(done) => {
+    request(app)
+    .get('/user/me')
+    .expect(401)
+    .expect((res) => {
+      expect(res.body).toEqual({});
+    })
+    .end(done);
+  });
+});
+
+describe('POST/ user',() => {
+  it('should save user for valid data',(done) => {
+    var email = "email@email.com";
+    var password = "examplepassword";
+    request(app)
+    .post('/user')
+    .send({email,password})
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.email).toBe(email);
+      expect(res.body.password).toNotBe(password);
+    })
+    .end(done);
+  });
+
+  it('should not save user for invalid data',(done) => {
+      var email = "emailnotvalid";
+      var password = "wordpss";
+      request(app)
+      .post('/user')
+      .send({email,password})
+      .expect(400)
+      .end(done);
+  });
+
+  it('should not create user for duplicate email',(done) => {
+    request(app)
+    .post('/user')
+    .send(users[0])
+    .expect(400)
+    .end(done);
+  });
 });

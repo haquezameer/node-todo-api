@@ -92,7 +92,7 @@ app.post('/user',(req,res) => {
       return user.generateAuthToken();
   }).then((token) => {
   res.header('x-auth',token).send(user);
-}).catch((e) => res.send(e));
+}).catch((e) => res.status(400).send(e));
 });
 
 
