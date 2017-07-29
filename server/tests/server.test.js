@@ -268,12 +268,29 @@ describe('POST/ user/login',() => {
       })
       .end((err,res) =>{
         if(err)
-          done(err);
+          return  done(err);
         User.findById(users[1]._id).then((user) => {
             expect(user.tokens.length).toBe(0);
             done();
         }).catch((e) => done(e));
       });
   });
+});
 
+describe('/user/me/token',() => {
+  it('should remove token',(done) => {
+    var user = users[0];
+    request(app)
+    .delete('/user/me/token')
+    .set('x-auth',user.tokens[0].token)
+    .expect(200)
+    .end((err,res) => {
+      if(err)
+        done(err);
+      User.findById(user._id).then((user) => {
+        expect(user.tokens.length).toBe(0);
+        done();
+      }).catch((e) => done(e));
+    });
+  });
 });
