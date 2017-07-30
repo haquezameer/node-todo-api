@@ -18,9 +18,10 @@ const bcrypt = require('bcryptjs');
 app.use(bodyparser.json());
 
 
-app.post('/todo',(req,res) => {
+app.post('/todo',authenticate,(req,res) => {
     var todo = new Todo({
-      text: req.body.text
+      text: req.body.text,
+    _creator: req.user._id
     });
     todo.save().then((doc) => {
       res.send(doc);
@@ -29,20 +30,20 @@ app.post('/todo',(req,res) => {
     });
 });
 
-app.get('/todo',(req,res) => {
-  Todo.find().then((todo) => {
+app.get('/todo',authenticate,(req,res) => {
+  Todo.find({_creator:req.user._id}).then((todo) => {
     res.send({todo});
   },(err) => {
     res.status(400).send(err);
   });
 });
 
-app.get('/todo/:id',(req,res) => {
+app.get('/todo/:id',authenticate,(req,res) => {
   var id = req.params.id;
   if(!ObjectId.isValid(id))
     res.status(404).send();
 
-  Todo.findById(id).then((todo) => {
+  Todo.findOne({_id : id,_creator: req.user._id}).then((todo) => {
       if(!todo)
         res.status(404).send();
       res.send({todo});
@@ -51,18 +52,18 @@ app.get('/todo/:id',(req,res) => {
     });
 });
 
-app.delete('/todo/:id',(req,res) => {
+app.delete('/todo/:id',authenticate,(req,res) => {
   var id = req.params.id;
   if(!ObjectId.isValid(id))
     res.status(404).send();
-  Todo.findByIdAndRemove(id).then((todo) => {
+  Todo.findOneAndRemove({_id : id, _creator : req.user._id}).then((todo) => {
       if(!todo)
         res.status(404).send();
       res.send({todo});
   }).catch((e) => res.status(400).send());
 });
 
-app.patch('/todo/:id',(req,res) => {
+app.patch('/todo/:id',authenticate,(req,res) => {
 
   let body = _.pick(req.body,['completed','text']);
   let id = req.params.id;
@@ -79,7 +80,7 @@ app.patch('/todo/:id',(req,res) => {
     body.completedAt = null;
   }
 
-  Todo.findByIdAndUpdate(id,{$set : body},{new : true}).then((todo) => {
+  Todo.findOneAndUpdate({_id : id, _creator : req.user._id},{$set : body},{new : true}).then((todo) => {
     if(!todo)
       res.status(404).send();
     res.send({todo});
@@ -87,7 +88,7 @@ app.patch('/todo/:id',(req,res) => {
 });
 
 app.post('/user',(req,res) => {
-  const body = _.pick(req.body,['email','password']);
+  const body = _.pick(req.body,['email','password','_creator']);
   var user = new User(body);
   user.save().then(() => {
       return user.generateAuthToken();
